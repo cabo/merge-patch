@@ -1,0 +1,35 @@
+#!/usr/bin/env ruby
+require_relative '../lib/merge-patch'
+require 'json'
+
+Encoding.default_external = Encoding::UTF_8
+require 'optparse'
+require 'ostruct'
+
+$options = OpenStruct.new
+begin
+  op = OptionParser.new do |opts|
+    opts.banner = "Usage: merge-patch orig patch"
+
+    opts.on("-v", "--[no-]verbose", "Run verbosely") do |v|
+      $options.verbose = v
+    end
+  end
+  op.parse!
+rescue Exception => e
+  warn e
+  exit 1
+end
+
+if ARGV.size != 2
+  puts op
+  exit 1
+end
+orig, patch = ARGV.dup
+ARGV.replace [orig]
+orig = JSON.load(ARGF.read)
+ARGV.replace [patch]
+patch = JSON.load(ARGF.read)
+
+merge = merge_patch(orig, patch)
+puts JSON.pretty_generate(merge)
